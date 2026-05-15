@@ -1,0 +1,7 @@
+node_modules/
+.env
+log/
+uploads/
+restclient/
+*.sql
+swagger-output.json

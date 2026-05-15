@@ -1,0 +1,21 @@
+# Local tooling / IDE
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node (backend)
+**/node_modules/
+**/.env
+**/log/
+**/uploads/
+**/restclient/
+**/swagger-output.json
+*.log
+
+# .NET (frontend)
+**/bin/
+**/obj/
+*.user
+*.suo

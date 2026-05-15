@@ -1,0 +1,34 @@
+Actividad
+Proyecto Final por equipos
+
+Detalle
+Inicia:
+
+01/feb/2026 - 00:00 hrs
+
+Termina:
+
+02/jun/2026 - 13:00 hrs
+
+Valor:
+
+10
+
+Prerrequisitos
+
+---
+
+Descripción
+Elementos del proyecto final
+
+Aplicación de servicios (API).
+Aplicación de cliente web.
+Documentación del proyecto.
+Indicaciones
+
+Referirse a la descripción del proyecto final colocado en la portada del curso.
+Revisar la rúbrica de evaluación.
+Debe colocar sus documentos en formato Word en esta actividad con el nombre EquipoNo_ProyectoFinal.docx.
+Debe colocar sus códigos fuentes en formato ZIP en esta actividad con el nombre EquipoNo_ProyectoFinal.zip.
+Debe colocar todas las cuentas necesarias para poder probar su proyecto en un archivo de texto txt.
+En caso de no subir sus documentos, no se podrá realizar la evaluación de su proyecto.

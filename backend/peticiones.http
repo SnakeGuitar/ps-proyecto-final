@@ -1,0 +1,84 @@
+@host = http://localhost:3000/api
+
+### 1. Login como Administrador (para obtener el token JWT)
+# @name login
+POST {{host}}/auth
+Content-Type: application/json
+
+{
+    "email": "gvera@uv.mx",
+    "password": "patito"
+}
+
+###
+@token = {{login.response.body.jwt}}
+
+### 2. GET - Listar todos los usuarios
+GET {{host}}/usuarios
+Authorization: Bearer {{token}}
+
+### 3. POST - Crear usuario 1
+POST {{host}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "email": "juan.perez@uv.mx",
+    "password": "juan123",
+    "nombre": "Juan Pérez",
+    "rol": "Usuario"
+}
+
+### 4. POST - Crear usuario 2
+POST {{host}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "email": "maria.lopez@uv.mx",
+    "password": "maria123",
+    "nombre": "María López",
+    "rol": "Usuario"
+}
+
+### 5. POST - Crear usuario 3
+POST {{host}}/usuarios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "email": "carlos.ramirez@uv.mx",
+    "password": "carlos123",
+    "nombre": "Carlos Ramírez",
+    "rol": "Administrador"
+}
+
+### 6. GET - Listar usuarios (ya con los 3 nuevos agregados)
+GET {{host}}/usuarios
+Authorization: Bearer {{token}}
+
+### 7. GET - Consultar un usuario específico por email
+GET {{host}}/usuarios/juan.perez@uv.mx
+Authorization: Bearer {{token}}
+
+### 8. PUT - Modificar usuario (cambiar nombre y rol)
+PUT {{host}}/usuarios/maria.lopez@uv.mx
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "nombre": "María López García",
+    "rol": "Administrador"
+}
+
+### 9. GET - Verificar el cambio realizado por el PUT
+GET {{host}}/usuarios/maria.lopez@uv.mx
+Authorization: Bearer {{token}}
+
+### 10. DELETE - Eliminar un usuario
+DELETE {{host}}/usuarios/carlos.ramirez@uv.mx
+Authorization: Bearer {{token}}
+
+### 11. GET - Verificar el listado tras la eliminación
+GET {{host}}/usuarios
+Authorization: Bearer {{token}}

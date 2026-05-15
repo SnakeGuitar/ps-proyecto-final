@@ -1,0 +1,1259 @@
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Práctica. Backend API en Node.js.
+
+     Instrucciones. Elabore una aplicación web de Node.js utilizando el patrón de diseño de software MVC
+     con modelos y controladores con autorización, que implemente el método de autenticación JWT, el
+     manejo de archivos, una bitácora de acciones, además del manejo y registro de errores.
+
+     1. Sigue las instrucciones de la práctica en la siguiente página.
+     2. Crea un reporte de práctica en un archivo de Word con una portada con tu nombre. Guárdalo con el
+
+          nombre NombreAlumno_BackendNode.docx.
+     3. Coloca las siguientes capturas de pantalla, cada una con una descripción textual arriba de la
+
+          captura.
+               a. Coloca capturas de pantalla del código fuente donde se exponga la funcionalidades de la
+                    aplicación.
+               b. Coloca la captura de pantalla de Visual Studio Code con la extensión REST API donde se vea
+                    una consulta GET y 3 nuevos usuarios agregados por ti.
+               c. Coloca capturas de pantalla de Visual Studio Code con la extensión REST API ejecutando
+                    consultas POST, PUT y DELETE para agregar, modiYcar y eliminar usuarios.
+               d. Incluye la captura de pantalla de la salida de la documentación de tu API en la interfaz de
+                    Swagger en un navegador web.
+               e. Coloca capturas de pantalla de la consola de MySQL listando las tablas con datos en tu base
+                    de datos de MySQL creadas por el ORM.
+               f. Publica tu código fuente en un proyecto público de GitHub. Coloca la URL del código fuente
+                    publicado en GitHub.
+
+     4. Sube tu reporte de práctica archivo Word a la actividad en Eminus.
+
+     Prerrequisitos
+
+     1. Esta práctica tiene como prerrequisito tener instalado el software Visual Studio Code con la extensión
+          REST Client.
+          Puede seguir las instrucciones de cómo instalar Visual Studio Code desde la práctica Instalación de
+          Visual Studio Code.
+
+     2. Esta práctica tiene como prerrequisito tener instalado la plataforma Node.js en su equipo.
+          Puede seguir las instrucciones de cómo instalar Node.js desde la práctica Instalación de Node.js.
+
+     3. Esta práctica tiene como prerrequisito tener instalado MySQL en su equipo.
+          Puede seguir las instrucciones de cómo instalar MySQL desde la práctica Instalación de MySQL.
+
+     4. Puede seguir las instrucciones de cómo publicar un proyecto en Visual Studio Code a GitHub desde la
+          práctica Como publicar un proyecto a GitHub desde Visual Studio Code.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. DeYna su API.
+
+     Lo primero que tenemos que realizar antes de comenzar a escribir código y crear, es deYnir el API. Esta
+     práctica crea la siguiente API:
+
+                 API                           Descripción         Cuerpo de     Cuerpo de la        Rol requerido
+GET /api/archivos              Obtener todas las archivos          la solicitud    respuesta   Administrador
+
+                                                                   Ninguno Lista de archivos
+
+GET /api/archivos /{id}        Obtener una archivo por ID          Ninguno Archivo             Administrador
+
+POST /api/archivos             Agregar una nueva archivo           Categoría Archivo agregado Administrador
+
+PUT /api/archivos/{id}         Actualizar una archivo existente    Categoría Ninguno           Administrador
+
+DELETE /api/archivos/{id} Eliminar una archivo                     Ninguno Ninguno             Administrador
+
+GET /api/bitacora              Obtener todas las Clas de la bitácora Ninguno Lista de operaciones Administrador
+
+GET /api/categorias            Obtener todas las categorías        Ninguno Lista de categorías Administrador, Usuario
+
+GET /api/categorias/{id}       Obtener una categoría por ID        Ninguno Categoría           Administrador, Usuario
+
+POST /api/categorías           Agregar una nueva categoría         Categoría Categoría agregada Administrador
+
+PUT /api/categorias/{id}       Actualizar una categoría existente  Categoría Ninguno           Administrador
+
+DELETE                         Eliminar una categoría              Ninguno Ninguno             Administrador
+/api/categorias/{id}
+
+GET /api/productos             Obtener todas las productos         Ninguno Lista de productos Administrador, Usuario
+
+GET /api/productos?{s=titulo}  Obtener todas las productos que     Ninguno Lista de productos Administrador, Usuario
+                               contengan en el título la cadena s
+
+GET /api/productos/{id}        Obtener una producto por ID         Ninguno Producto            Administrador, Usuario
+
+POST /api/productos            Agregar una nueva producto          Producto Producto agregada Administrador
+
+PUT /api/productos/{id}        Actualizar una producto existente Producto Ninguno              Administrador
+
+DELETE /api/productos/{id} Eliminar una producto                   Ninguno Ninguno             Administrador
+
+GET /api/usuarios              Obtener todas los usuarios          Ninguno Lista de usuarios Administrador
+
+GET /api/usuarios/{id}         Obtener un usuario por ID           Ninguno Usuario             Administrador
+
+POST /api/usuarios             Agregar un nuevo usuario            Usuario Usuario agregado Administrador
+
+PUT /api/usuarios/{id}         Actualizar un usuario existente     Usuario Ninguno             Administrador
+
+DELETE /api/usuarios/{id} Eliminar un usuario                      Ninguno Ninguno             Administrador
+
+GET /api/roles                 Obtener todas los roles             Ninguno Lista de roles      Administrador
+
+GET /api/auth                  Inicio de sesión                    Ninguno JWT                 Ninguno
+
+GET /api/tiempo                Obtener el tiempo restante de sesión Ninguno JWT                Administrador, Usuario
+Facultad de Estadística e Informática
+Práctica guiada
+
+     El siguiente diagrama muestra el diseño de la aplicación.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     ¿Qué es un Json Web Token?
+
+     Un JSON Web Token (JWT) es un estándar (RFC 7519) que deYne una forma segura y compacta de
+     transmitir información entre dos entidades en forma de un objeto JSON.
+
+     Esta información puede ser veriYcada y es conYable ya que está Yrmada digitalmente. Los JWTs pueden
+     ser Yrmados utilizando una llave privada (con un algoritmo HMAC) o con llaves públicas y privadas
+     utilizando RSA o ECDSA.
+
+     La autenticación basada en tokens carece de estado (es stateless).
+
+     ¿Cuándo se debería utilizar Json Web Tokens?
+
+     Aquí veremos un par de escenarios donde es útil y recomendable utilizar los JWTs:
+
+          · Autorización: Este es el caso de uso más común de los JWTs. Una vez que un usuario ha iniciado
+               sesión, cada llamada subsecuente al servicio incluirá el JWT, permitiendo al usuario acceder a
+               rutas, servicios o recursos que solo están permitidos con su debido token. SSO (Single Sign On)
+               es una funcionalidad que hoy en día usa los JWTs ampliamente, porque son de tamaño reducido y
+               por su habilidad de ser usado entre diferentes dominios.
+
+          · Intercambio de Información: Los JWTs son útiles también para transmitir información entre dos
+               entidades. Debido a que los JWTs pueden estar Yrmados -- por ejemplo, utilizando una llave
+               pública/privada -- podemos estar seguros que quien manda la información es verdaderamente él
+               quien lo manda. Adicionalmente, la Yrma es calculada utilizando el encabezado del JWT y el
+               contenido (payload) por lo que también estamos seguros que el contenido del JWT no fue
+               alterado.
+
+     ¿Qué estructura tiene un JWT?
+
+     Un JWT está separado por puntos ( . ) en tres partes, las cuales son:
+
+          1. Encabezado (header)
+
+          2. Contenido (payload)
+
+          3. Firma (signature)
+
+     Un JWT comúnmente tiene la siguiente forma.
+
+                                                                           xxxxx.yyyyy.zzzzz
+
+     Veamos que signiYca cada una de estas partes.
+
+     1. Header
+
+     El encabezado típicamente consiste de dos partes: el tipo de token (que será JWT) y el algoritmo que se
+     está usando en la Yrma, que puede ser HMAC SHA256 o RSA.
+
+     Por ejemplo:
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Después, este JSON se codiYca en Base64URL para formar parte del primer segmento del JWT.
+     2. Payload
+     La segunda parte del JWT es el contenido que se transmite o certiYca (payload), el cual contiene la serie
+     de claims. Claims son aYrmaciones sobre una entidad (usualmente, el usuario) e información adicional.
+     Hay tres tipos de claims: registrados, públicos y privados.
+
+          · Claims registrados: Son un conjunto de claims predeYnidos que no son obligatorios pero sí
+               recomendados, para proveer un conjunto de claims interoperables. Algunos de ellos
+               son: iss (issuer), exp (tiempo de expiración), sub (subject), aud (audience), entre otros.
+
+     Nótese que los nombres de los claims son de tres letras por la misma intención de mantener el JWT de
+     tamaño reducido.
+
+          · Claims públicos: Estos pueden ser deYnidos como cada quien desee, pero para evitar colisiones
+               de nombres y mantener un estándar (ya que puede usarse en distintos servicios), se utiliza la
+               siguiente lista llamada IANA JSON Web Token Registry.
+
+          · Claims privados: Estos claims son personalizados por cada quien que implemente los JWTs y al
+               igual que los públicos, para evitar colisiones es recomendable utilizar un formato URL con algún
+               namespace y así asegurar que son únicos
+                    § Por ejemplo, un claim que guarda los roles de ASP.NET Core tendría el siguiente
+                         nombre: http://schemas.microsoft.com/ws/2008/06/identity/claims/role.
+
+     Un ejemplo de un payload sería el siguiente:
+
+     Y al igual que el header, este segmento se codiYca en Base64Url.
+     Nota: Aunque los JWT estén Yrmados, solo están protegidos para evitar falsiYcaciones (editar el payload)
+     pero de igual forma, toda la información en el payload es visible para cualquiera. NO se recomienda
+     incluir información sensible en el payload al menos que esté encriptada*.*
+     3. Signature
+     Para crear la Yrma debemos de tomar el header codiYcado, el payload codiYcado, una llave secreta, el
+     algoritmo especiYcado en el header y Yrmar todo eso.
+     Por ejemplo, si vamos a utilizar el algoritmo de encriptación HMAC SHA256, la Yrma será creada de la
+     siguiente forma:
+Facultad de Estadística e Informática
+Práctica guiada
+
+     La Yrma se usará para veriYcar que el mensaje no ha cambiado mientras viaja por la red, y en caso de ser
+     tokens Yrmados por una llave privada de un certiYcado, también se puede veriYcar el emisor.
+     Juntando todo
+     Al Ynal, tendremos tres cadenas de texto codiYcadas en Base64-URL separadas por puntos y se podrán
+     incluir en solicitudes HTTP o contenido HTML sin ningún problema. Esto es una forma mucho más
+     compacta comparado a otros estándares como SAML que utiliza XML.
+     Al Ynal, tendríamos un JWT de la siguiente forma:
+
+     Para veriYcar JWT, se puede visitar el sitio jwt.io.
+     ¿Cómo funcionan los JWT?
+     Cuando un usuario ha sido autenticado, el servicio deberá regresar un JSON Web Token para ser usado
+     como sus credenciales. Dado que esto es usado para autorizar el usuario, debes de considerar cuidar
+     muy bien donde guardas el token, y eliminarlo lo más pronto posible si ya no se requiere.
+     Cuando un usuario quiere acceder a contenido restringido en una ruta protegida, se debe de incluir el
+     token en el HTTP Header Authorization y utilizando el esquema Bearer.
+     Ejemplo:
+
+     Generalmente en Web APIs (y como lo haremos más adelante) que son aplicaciones stateless, siempre
+     requerirá que el token vaya incluido en el encabezado Authorization. El servicio veriYcará lo necesario
+     para determinar si es un token válido o no, y si este es válido. leerá su información (los claims) y lo usará
+     en la solicitud de ser necesario.
+     Esto también reduce las consultas a bases de datos para leer información del usuario, ya que el token
+     puede contener información común para poder operar (como username, email, roles, etc).
+     Dado que el token va incluido en el header, no habrá problemas con el Cross-Origin Resource Sharing
+     (CORS) ya que no se utilizan cookies (las cookies son por dominio).
+Facultad de Estadística e Informática
+Práctica guiada
+
+          1. La aplicación cliente solicita autorización al Identity Server (como el que vamos a utilizar).
+
+          2. Cuando se autoriza el acceso, el servidor de autorización regresa el access token a la aplicación
+               cliente.
+
+          3. La aplicación cliente usa el access token para acceder a recursos protegidos (como los endpoints
+               de una API).
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Crear la base de datos
+     1. Usted ya debería contar con esta base de datos del proyecto anterior. Solo realice el paso de
+
+          eliminarla y volverla a crear para tenerla completamente vacía.
+     2. En el menú de inicio de Windows, busque el programa MySQL escribiendo mysql y haga clic en
+
+          ejecutar. También puede ejecutar la versión "MySQL 8.0 Command Line Cliente Unicode" que tiene
+          soporte para acentos y caracteres especiales como la letra ñ.
+
+     3. Escriba la contraseña del super usuario root que creó en la instalación de MySQL.
+
+     4. Si se equivoca en la contraseña, la ventana se cerrará y tendrá que volver a abrir el programa cliente.
+     5. El cliente de MySQL debe verse de la siguiente forma. Esto quiere decir que se ha conectado
+
+          correctamente a su servidor local MySQL con el usuario root.
+
+     6. Abra Visual Studio Code.
+     7. Asegúrese de contar con una carpeta de trabajo en C:\codigo. Si aún no ha creado la carpeta
+
+          C:\codigo hágalo antes de continuar.
+     8. Seleccione Archivo > Abrir carpeta en el menú principal.
+Facultad de Estadística e Informática
+Práctica guiada
+
+9. En el cuadro de diálogo Abrir carpeta, cree una carpeta en la ruta C:\codigo\backendnode y
+    selecciónela. Luego haga clic en Seleccionar carpeta.
+
+10. Cree un nuevo archivo llamado bd.sql para crear la base de datos de la aplicación. Agregué las
+    siguientes instrucciones al archivo.
+
+DROP DATABASE IF EXISTS mercadolibrenode;
+CREATE DATABASE mercadolibrenode CHARACTER SET utf8mb4;
+USE mercadolibrenode;
+
+11. Dentro de MySQL, para ejecutar el script de creación de la base de datos, ejecute las siguiente
+    instrucción source:
+
+mysql> source C:\codigo\backendnode\bd.sql
+
+12. VeriYque que se la base de datos se haya creado.
+
+mysql> show databases;
+
++--------------------+
+
+| Database  |
+
++--------------------+
+
+| information_schema |
+
+| mysql     |
+
+| mercadolibrenode |
+
+| performance_schema |
+
+| sys       |
+
++--------------------+
+
+5 rows in set (0.00 sec)
+
+13. Ahora vamos a crear el usuario para conectarse desde su aplicación. En este ejemplo le colocaremos
+    el nombre mercadolibre_user con password M3rc@d0, pero usted puede colocar el que preYera.
+
+mysql> CREATE USER mercadolibre_user@localhost IDENTIFIED BY 'M3rc@d0';
+Query OK, 0 rows affected (0.01 sec)
+
+14. Y para darle permisos en la nueva base de datos, se utiliza:
+
+mysql> GRANT ALL ON mercadolibrenode.* TO mercadolibre_user@localhost;
+Query OK, 0 rows affected (0.01 sec)
+
+15. Si solo quisiéramos darle permisos de lectura y escritura, sin que pudiera crear objetos, se usaría:
+
+mysql> GRANT SELECT, INSERT, UPDATE, DELETE ON mercadolibrenode.* TO mercadolibre_user@localhost;
+
+16. No utilice este comando en este momento, pues queremos que el usuario si pueda crear, modiYcar y
+    eliminar las tablas que serán parte de la base de datos. Después de la creación de las tablas, puede
+    revocar los privilegios y utilizar este comando para un entorno más seguro.
+
+17. Si quisiera revocar los permisos del usuario se podría usar:
+
+mysql> REVOKE ALL ON mercadolibrenode.* FROM mercadolibre_user@localhost;
+
+18. Para veriYcar que los permisos se hayan aplicado se ejecuta:
+
+mysql> SHOW GRANTS FOR mercadolibre_user@localhost;
+
++-----------------------------------------------------------------------+
+
+| Grants for mercadolibre_user@localhost                                   |
+Facultad de Estadística e Informática
+Práctica guiada
+
++-----------------------------------------------------------------------+
+
+| GRANT USAGE ON *.* TO `mercadolibre_user`@`localhost`                    |
+
+| GRANT ALL PRIVILEGES ON `mercadolibrenode`.* TO `mercadolibre_user`@`localhost` |
+
++-----------------------------------------------------------------------+
+
+2 rows in set (0.00 sec)
+
+19. Puede cerrar la sesión con exit; y salir.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones: Creación de la aplicación API.
+
+     1. Asegúrese de contar con una carpeta de trabajo en C:\codigo. Si aún no ha creado la carpeta
+          C:\codigo hágalo antes de continuar.
+
+     2. Desde VS Code seleccione Archivo > Abrir carpeta en el menú principal.
+     3. En el cuadro de diálogo Abrir carpeta, cree una carpeta en la ruta C:\codigo\backendnode y
+
+          selecciónela. Luego haga clic en Seleccionar carpeta.
+     4. El nombre de la carpeta se convierte en el nombre del proyecto y el nombre del espacio de nombres
+
+          de forma predeterminada.
+     5. Abra una Terminal de consola presionando Ctrl + ñ.
+     6. Asegúrese de tener instalado Node.js en su equipo. En caso de que el comando no sea reconocido,
+
+          instale Node.js desde la práctica Instalación de Node.js.
+
+       > node -v
+       v20.16.0
+
+     7. Utilice el comando npm init para crear un archivo package.json para su aplicación.
+
+       > npm init
+
+     8. Este comando le solicita varias cosas, como el nombre y la versión de su aplicación. Puede
+          simplemente presionar Enter para aceptar los valores predeterminados.
+
+        package name: (backendnode)
+        version: (1.0.0)
+        description:
+        entry point: (index.js)
+        test command:
+        git repository:
+        keywords:
+        author:
+        license: (ISC)
+        About to write to C:\codigo\backendnode\package.json:
+
+        {
+           "name": "backendnode",
+           "version": "1.0.0",
+           "description": "",
+           "main": "index.js",
+           "scripts": {
+              "test": "echo \"Error: no test specified\" && exit 1"
+           },
+           "author": "",
+           "license": "ISC"
+
+        }
+        Is this OK? (yes)
+
+     9. Si quisiera omitir el asistente, solo se agrega la flag -y al comando npm init -y.
+     10. Observe que se ha creado un archivo llamado package.json. Deje abierto este archivo.
+
+     11. Ahora instale el paquete Express en este directorio y guárdelo en la lista de dependencias del
+          proyecto.
+Facultad de Estadística e Informática
+Práctica guiada
+
+       > npm install express --save
+
+     12. Observe que se ha instalado una versión de Express, en este caso la versión 4.19.2.
+
+     13. También instale el paquete dotenv que permite cargar variables de entorno desde un archivo con
+          extensión .env hacia process.env. En este caso, utilizamos dotenv para almacenar las conYguraciones
+          de la base de datos y el puerto del servidor.
+
+       npm install dotenv --save
+
+     14. Ahora instale el paquete cors que permite a clientes de otros dominios o puertos, conectarse a los
+          endpoints de esta API.
+
+       npm install cors --save
+
+     15. Ahora instale el paquete mysql2 que es el cliente MySQL para Node.js con enfoque en el rendimiento.
+
+       npm install mysql2 --save
+
+     16. Solo como referencia, para instar un paquete temporalmente sin agregarlo a la lista de dependencias,
+          se puede agregar --no-save.
+
+     17. Solo como referencia, para desinstalar un paquete, se utiliza npm uninstall <package_name>.
+     18. Ahora vamos a crear el archivo .env en la raíz de su aplicación. Una vez creado, agregue los datos se
+
+          su conexión a MySQL.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     19. No se preocupe por los valores de las variables JWT_SECRET y FILES_IN_DB, estas se verán más
+          adelante.
+
+     20. Ahora vamos a crear el archivo principal de Node.js. Cree un nuevo archivo llamado index.js y
+          agregue el siguiente código.
+
+     21. Ejecute la aplicación con el siguiente comando desde la terminal de VS Code. VeriYque que su
+          aplicación no marque errores.
+
+       > node index.js
+
+     22. Abra un navegador web y abra la ruta http://localhost:3000/ para ver el resultado.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     23. Para detener el servidor, solo presione Ctrl + C en la consola.
+     24. Como cada vez que realice un cambio en su código, debe repetir esta operación, puede utilizar el
+
+          paquete nodemon. Se puede instalar como una dependencia de desarrollo con --save-dev y así no se
+          copiará a producción; pues solo es un paquete que se usa en desarrollo.
+
+       npm install nodemon --save-dev
+
+     25. Observe en su archivo package.json que se agrega en una lista aparte de dependencias para
+          desarrollo.
+
+     26. En este mismo archivo package.json, debajo del apartado de scripts, agregue un nombre de script
+          para ejecutar nodemon cada vez que escribamos node start en la consola.
+
+     27. Ahora puede utilizar npm start para iniciar su aplicación. Observe la consola.
+
+     28. Ahora cuando realice cualquier cambio en el código, el servidor se reiniciará de manera automática.
+     29. Cambie el mensaje en el método get.
+
+     30. Observe como se reinicia el servidor y puede ver los cambios de inmediato al refrescar su navegador.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     31. Ya que ha practicado el cómo instalar paquetes, instale de la misma manera los paquetes bcrypt,
+          cors, dotenv, express, jsonwebtoken, multer, mysql2, request-ip y el paquete swagger-ui-express como
+          dependencias.
+
+     32. Igualmente veriYque instalar el paquete nodemon, y el paquete swagger-autogen como dependencias
+          solo para desarrollo.
+
+     33. Para terminar la ejecución escriba en la consola Ctrl + C en Visual Studio Code.
+     34. Felicidades, ha creado su aplicación de manera correcta.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones: Agregar la funcionalidad ORM
+     1. Abra una terminal de consola con Ctrl + ñ.
+     2. Instale el paquete para darle el soporte de ORM a su aplicación. En Node el ORM se llama Sequelize
+
+          y funciona para Postgres, MySQL, MariaDB, SQLite y SQL Server. Puede encontrar más información
+          desde Sequelize.
+
+       npm install sequelize --save
+
+     3. Agregue el paquete para poder hacer Migrations. Las migraciones le permiten mantener
+          sincronizados sus modelos con su base de datos.
+
+       npm install -g sequelize-cli
+
+     4. Agregue el paquete para utilizar MySQL con ORM.
+
+       npm install mysql2 --save
+
+     5. Después de la instalación, utilice CLI para generar migraciones, seeders, conYguración, modelos y el
+          archivo de conYguración. En la terminal ejecute el siguiente comando utilizando npx (Node Package
+          Execute) que nos va a ayudar a ejecutar el paquete sequelize-cli.
+
+       npx sequelize init
+
+     6. El comando se puede escribir solo sequelize o sequelize-cli.
+     7. Observe con solo escribir sequelize, se manda llamar sequelize-cli. Observe las carpetas creadas.
+
+     8. Si inspecciona su directorio en este momento, se dará cuenta de que el comando anterior acaba de
+          crear los directorios config, models, migrations, seeders y generó el código en ellos.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     9. Ahora se va a conYgurar la conexión a la base de datos. El archivo config/config.json que se
+          encuentra en json, sirve para crear una conYguración estática. Como se desea una conYguración
+          dinámica leyendo valores desde el archivo .env, debe crear un nuevo archivo en config/config.js
+          (observe que la extensión es distinta). Entonces, en la carpeta config le quedaran dos archivos:
+          config.json (aunque no se usará, no lo borre) y config.js con el siguiente contenido.
+
+     10. Por el momento solo utilizaremos la sección llamada development pero usted puede utilizar las otras
+          secciones o crear nuevas dependiendo de las necesidades de sus proyectos.
+
+     11. Y ahora para decirle a sequelize del cambio, debemos crear un archivo en raíz llamado .sequelizerc
+          con el siguiente contenido.
+
+     12. También debemos modiYcar el archivo /models/index.js avisando del cambio.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     13. Finalmente, asegúrese de crear las siguientes carpetas en el proyecto:
+               · conYg. Aquí van la conYguraciones.
+               · controllers. Aquí van los controladores.
+               · log. Aquí van los archivos de logging.
+               · middlewares. Aquí va funcionalidad extra que puede utilizar la aplicación.
+               · migrations. Aquí se colocan las migraciones.
+               · models. Aquí van los modelos.
+               · restclient. Aquí van las consultas de ayuda de la extensión restclient.
+               · routes. Aquí van la deYnición de las rutas que llaman a los controladores.
+               · seeders. Aquí van la inicialización de los datos.
+               · services. Aquí van los componentes reutilizables de código.
+               · uploads. Aquí van los archivos subidos si decidimos colocarlos en el Yle system.
+
+     14. Felicidades, ha conYgurado correctamente su aplicación.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar los Modelos.
+     1. Se utilizará el comando sequelize-cli para generar archivos de modelo y migraciones.
+     2. Se deben de crear los modelos: categoria, producto, la relación muchos a muchos entre ellos llamada
+
+          categoriaproducto, además usuario y rol, y Ynalmente los modelos archivo y bitacora.
+     3. Para crear el modelo categoría, ejecute el siguiente comando.
+
+       npx sequelize model:generate --name categoria --attributes nombre:string,protegida:boolean
+
+     4. Como resultado deberíamos tener en models el archivo categoria.js y en migrations otro archivo
+          llamado xxxx-create-categoria.js.
+
+     5. No todo lo predeterminado está correcto. Vamos a modiYcar el archivo categoria.js y debe quedar de
+          la siguiente forma.
+
+     6. Y dentro del nuevo archivo creado xxxx-create-categoria.js en la carpeta migrations, escribimos el
+          siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     7. Para crear el modelo producto, ejecute el siguiente comando
+
+       npx sequelize model:generate --name producto --attributes
+       titulo:string,sinopsis:string,anio:integer,poster:string
+Facultad de Estadística e Informática
+Práctica guiada
+
+     8. Como resultado deberíamos tener en models el archivo producto.js y en migrations otro archivo
+          llamado xxxx-create-producto.js.
+
+     9. No todo lo predeterminado está correcto. Vamos a modiYcar el archivo producto.js y debe quedar de
+          la siguiente forma.
+
+     10. Y dentro del nuevo archivo creado xxxx-create-producto.js en la carpeta migrations, escribimos el
+          siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     11. Una vez que los dos modelos están correctos, es hora de agregar el modelo categoriaproducto que
+          actúa como relación muchos a muchos entre estas dos. Como sequelize no la crea automáticamente,
+          vamos a crear el archivo de migración nosotros.
+
+       npx sequelize migration:generate --name create-categoriaproducto
+
+     12. Y dentro del nuevo archivo creado xxxx-create-categoriaproducto.js en la carpeta migrations,
+          escribimos el siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     13. Para crear el modelo rol, ejecute el siguiente comando.
+
+       npx sequelize model:generate --name rol --attributes id:string,nombre:string
+
+     14. Como resultado deberíamos tener en models el archivo rol.js y en migrations otro archivo llamado
+          xxxx-create-rol.js.
+
+     15. No todo lo predeterminado está correcto. Vamos a modiYcar el archivo rol.js y debe quedar de la
+          siguiente forma.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     16. Y dentro del nuevo archivo creado xxxx-create-rol.js en la carpeta migrations, escribimos el
+          siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     17. Para crear el modelo usuario, ejecute el siguiente comando.
+
+       npx sequelize model:generate --name usuario --attributes
+       email:string,passwordhash:string,nombre:string,rolid:string
+
+     18. Como resultado deberíamos tener en models el archivo usuario.js y en migrations otro archivo
+          llamado xxxx-create-usuario.js.
+
+     19. No todo lo predeterminado está correcto. Vamos a modiYcar el archivo usuario.js y debe quedar de
+          la siguiente forma.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     20. Y dentro del nuevo archivo creado xxxx-create-usuario.js en la carpeta migrations, escribimos el
+          siguiente código.
+
+     21. Para crear el modelo archivo, ejecute el siguiente comando.
+
+       npx sequelize model:generate --name archivo --attributes nombre:string,mime:string
+Facultad de Estadística e Informática
+Práctica guiada
+
+     22. Como resultado deberíamos tener en models el archivo archivo.js y en migrations otro archivo
+          llamado xxxx-create-archivo.js.
+
+     23. No todo lo predeterminado está correcto. Vamos a modiYcar el archivo archivo.js y debe quedar de
+          la siguiente forma.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     24. Y dentro del nuevo archivo creado xxxx-create-archivo.js en la carpeta migrations, escribimos el
+          siguiente código.
+
+     25. Para crear el modelo bitacora, ejecute el siguiente comando.
+
+       npx sequelize model:generate --name bitacora --attributes nombre:string,operacion:string
+
+     26. Como resultado deberíamos tener en models el archivo bitacora.js y en migrations otro archivo
+          llamado xxxx-create-bitacora.js.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     27. No todo lo predeterminado está correcto. Vamos a modiYcar el archivo bitacora.js y debe quedar de
+          la siguiente forma.
+
+     28. Y dentro del nuevo archivo creado xxxx-create-bitacora.js en la carpeta migrations, escribimos el
+          siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     29. Con los modelos y las migraciones en su lugar, ahora estamos listos para generar los modelos en la
+          base de datos ejecutando las migraciones.
+
+     30. Recuerde que usted puede seguir agregando más modelos si los necesita en su proyecto. Solo repita
+          estos mismos pasos para realizarlo.
+Facultad de Estadística e Informática
+Práctica guiada
+
+Instrucciones. Crear las estructuras de la base de datos.
+
+1. Ya que tenemos listos los modelos y los scripts de las migraciones, ahora estamos listos para generar
+    las tablas en la base de datos ejecutando las migraciones.
+
+2. Para hacer esto, ejecutamos el siguiente comando.
+
+npx sequelize db:migrate
+
+3. Observe en la consola como se crean las tablas en la base de datos.
+4. Si en ahora revisa su servidor de MySQL podrá observar que se han creado las siguientes tablas.
+
+mysql> SHOW TABLES;
+
++-----------------------+
+
+| Tables_in_netflixnode |
+
++-----------------------+
+
+| archivo                |
+
+| bitacora               |
+
+| categoria              |
+
+| categoriaproducto      |
+
+| producto               |
+
+| rol                    |
+
+| sequelizemeta          |
+
+| usuario                |
+
++-----------------------+
+
+8 rows in set (0.01 sec)
+
+5. También genera otra tabla de apoyo llamada sequelizemeta que le indica al ORM las migraciones
+    realizadas.
+
+6. Pruebe que puede deshacer la migración realizada escribiendo el comando.
+
+npx sequelize db:migrate:undo:all
+
+7. Si en ahora revisa su servidor de MySQL podrá observar que se han eliminado las tablas.
+
+mysql> SHOW TABLES;
+
++-----------------------+
+
+| Tables_in_netflixnode |
+
++-----------------------+
+
+| sequelizemeta          |
+
++-----------------------+
+
+1 row in set (0.00 sec)
+
+8. Vuelva a realizar la migración y sus tablas volverán a la base de datos.
+
+npx sequelize db:migrate
+
+9. Cada vez que realice un cambio en sus modelos, debe volver a crear archivos de código con los
+    cambios para migraciones con diferente nombre para mantener sincronizado su código y su base de
+    datos.
+
+10. Enhorabuena, ha creado correctamente sus modelos.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar datos de inicio con el ORM.
+     1. Para agregar datos de inicio vamos a utilizar el ORM llamado Sequelize, en este caso, para trabajar
+
+          con MySQL. Normalmente se acostumbra inicializar la base de datos con datos de los catálogos.
+     2. Primero vamos a instalar el paquete para crear hash para las contraseñas.
+
+       npm install bcrypt --save
+
+     3. Ahora ejecute el siguiente comando para crear datos de inicio para el modelo categoria.
+
+       npx sequelize seed:generate --name categorias
+
+     4. Esto genera un nuevo archivo xxxx-categorias.js en la carpeta seeders. Modifíquelo de la siguiente
+          manera.
+
+     5. Puede acceder a este código desde seed-categorias.js.
+     6. Ejecute el siguiente comando para crear datos de inicio para el modelo producto.
+
+       npx sequelize seed:generate --name productos
+
+     7. Esto genera un nuevo archivo xxxx-productos.js en la carpeta seeders. Modifíquelo de la siguiente
+          manera.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     8. Puede acceder a este código desde seed-productos.js.
+     9. Ejecute el siguiente comando para crear datos de inicio para el modelo categoriaproducto.
+
+       npx sequelize seed:generate --name categoriaproducto
+
+     10. Esto genera un nuevo archivo xxxx-categoriaproducto.js en la carpeta seeders. Modifíquelo de la
+          siguiente manera.
+
+     11. Puede acceder a este código desde seed-categoriaproducto.js.
+     12. Ahora ejecute el siguiente comando para crear datos de inicio para el modelo usuario.
+
+       npx sequelize seed:generate --name usuarios
+
+     13. Esto genera un nuevo archivo xxxx-usuarios.js en la carpeta seeders. Modifíquelo de la siguiente
+          manera.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     14. Puede acceder a este código desde seed-usuarios.js.
+     15. Una vez que tiene deYnidos su datos de inicio, ejecute el comando para insertarlos en la base de
+
+          datos. La opción --debug le detalla el error en caso que lo hubiera.
+
+       npx sequelize db:seed:all --debug
+
+     16. Si desea revertir estas inserciones, ejecute el comando.
+
+       npx sequelize db:seed:undo:all
+
+     17. Y para regresar nuevamente los datos, vuelva a ejecutar el comando de seed.
+     18. Con este código, podremos generar nuestra base de datos utilizando el ORM que proporciona
+
+          sequelize.
+     19. Un ORM ofrece varios beneYcios, pues el mapeo de las tablas relacionales a objetos de
+
+          programación, facilita la comunicación con el repositorio, simpliYca las consultas, además que agrega
+          seguridad a la aplicación.
+     20. Puede veriYcar la creación de sus registros en la consola de MySQL.
+     21. Enhorabuena, la conexión con su base de datos utilizando un ORM esta correctamente realizada.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar middlewares.
+     1. El proyecto debe contar con una carpeta llamada middlewares y config.
+     2. Primero agregue un nuevo archivo llamado claimtypes.js en la carpeta config con el siguiente código.
+
+     3. Para recibir los archivos adjuntos, deberá utilizar un middleware de node.js como el paquete Multer
+          para el manejo de multipart/form-data, que se utiliza principalmente para cargar archivos desde
+          formularios.
+
+     4. Si aún no lo ha hecho, instale la dependencia desde la consola de Visual Studio Code.
+
+       npm install multer --save
+
+     5. Para el caso del middleware que guardara en una bitácora las acciones, vamos a necesitar obtener la
+          IP de los clientes. Para ello instale el paquete request-ip.
+
+       npm install request-ip --save
+
+     6. En la carpeta middlewares agregue un archivo llamado errorhandler.middleware.js con el siguiente
+          código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     7. En la carpeta middlewares agregue un archivo llamado bitacora.middleware.js con el siguiente código.
+
+     8. En la carpeta middlewares agregue un nuevo archivo llamado upload.middleware.js con el siguiente
+          código que contendrá esta funcionalidad.
+
+     9. Más adelante se agregarán más middlewares referentes a la autenticación y autorización de usuarios.
+     10. Enhorabuena, ha realizado correctamente el apartado.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar los Controladores.
+     Controlador: Categorías
+     1. Agregue un nuevo archivo llamado categorias.controller.js en la carpeta controllers con el
+
+          siguiente código.
+
+     2. Cada línea marcada con azul, es un método que iremos creando paso a paso.
+     3. Agregue el código del método getAll().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     4. Agregue el código del método get().
+
+     5. Agregue el código del método create().
+
+     6. Agregue el código del método update().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     7. Agregue el código del método delete().
+
+     Controlador: Productos
+     1. Agregue un nuevo archivo llamado productos.controller.js en la carpeta controllers con el siguiente
+
+          código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     2. Cada línea marcada con azul, es un método que iremos creando paso a paso.
+     3. Agregue el código del método getAll().
+
+     4. Agregue el código del método get().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     5. Agregue el código del método create().
+
+     6. Agregue el código del método update().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     7. Agregue el código del método delete().
+
+     8. Agregue el código del método asignaCategoria().
+
+     9. Agregue el código del método eliminaCategoria().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Controlador: Archivos
+     1. Agregue un nuevo archivo llamado archivos.controller.js en la carpeta controllers con el siguiente
+
+          código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     2. Cada línea marcada con azul, es un método que iremos creando paso a paso.
+     3. Agregue el código del método getAll().
+
+     4. Agregue el código del método getDetalle().
+
+     5. Agregue el código del método get().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     6. Agregue el código del método create().
+
+     7. Agregue el código del método update().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     8. Agregue el código del método delete().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Controlador: Usuarios
+     1. Agregue un nuevo archivo llamado usuarios.controller.js en la carpeta controllers con el siguiente
+
+          código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     2. Cada línea marcada con azul, es un método que iremos creando paso a paso.
+     3. Agregue el código del método getAll().
+
+     4. Agregue el código del método get().
+
+     5. Agregue el código del método create().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     6. Agregue el código del método update().
+Facultad de Estadística e Informática
+Práctica guiada
+
+     7. Agregue el código del método delete().
+
+     Controlador: Roles
+     1. Agregue un nuevo archivo llamado roles.controller.js en la carpeta controllers con el siguiente
+
+          código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Controlador: Bitácora
+     1. Agregue un nuevo archivo llamado bitacora.controller.js en la carpeta controllers con el siguiente
+
+          código.
+
+     2. Enhorabuena, ha creado sus controladores de manera correcta.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar autenticación a su API
+     JSON Web Token ayuda a proteger una ruta de un usuario no autenticado. El uso de JWT en la aplicación
+     evitará que los usuarios no autenticados accedan a endpoints protegidos.
+     JWT crea un token, lo envía al cliente y, a continuación, el cliente utiliza el token para realizar solicitudes.
+     También ayuda a veriYcar que sea un usuario válido que realiza esas solicitudes.
+     1. Se tiene que instalar el soporte para JWT antes de usarlo en la aplicación.
+
+       npm install jsonwebtoken --save
+
+     2. Ahora se tiene que generar una llave privada llamada secret para poder generar los JWT.
+     3. Desde la línea de comandos genere una cadena aleatoria de 35 bytes en hexadecimal. Entre a la
+
+          línea de comandos de node.
+
+       node
+       Welcome to Node.js v20.11.0.
+       Type ".help" for more information.
+       >
+
+     4. Y luego escriba este comando para generar la cadena.
+
+       > require("crypto").randomBytes(35).toString("hex")
+
+     5. Para salir de la línea de comandos de node presione dos veces Ctrl + C.
+     6. Copie y pegue esa cadena en su archivo .env en la variable JWT_SECRET.
+
+     7. No comparta esta cadena secreta. Si se Yltra esta cadena secreta, los usuarios no autenticados
+          pueden crear tokens falsos para acceder a las rutas.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar servicios.
+
+     1. Sus clientes van a requerir tokens de acceso, así que tenemos que crear un servicio que pueda
+          generarlos.
+
+     2. Agregue un nuevo archivo llamado jwttoken.service.js en la carpeta services con el siguiente código.
+
+3. Es obligatorio colocar el ClaimTypes.Name y ClaimTypes.Role para que plataformas como .NET, sepan
+    en cada petición, el nombre del usuario y su rol asignado. Cada uno esa basado en un esquema
+    estándar.
+
+ClaimTypes.Name       http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name
+ClaimTypes.GivenName  http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname
+ClaimTypes.Role       http://schemas.microsoft.com/ws/2008/06/identity/claims/role
+Facultad de Estadística e Informática
+Práctica guiada
+
+     4. Observe que se crear el token mediante la función JwtSecurityToken(). Esta función toma tres
+          parámetros:
+               · El payload son los primeros tres parámetros que pasará a la función. Esta carga útil contiene
+                    datos relacionados con el usuario, y estos datos no deben contener información conYdencial
+                    como contraseñas.
+               · El jwtSecret como último parámetro.
+               · Cuánto tiempo durará el token como penúltimo parámetro.
+
+     5. Después de pasar todos estos argumentos, JWT generará un token. Una vez generado el token, se
+          envía al cliente.
+
+     6. Este token deberá agregarse en cada petición que se haga para obtener el acceso a los métodos
+          protegidos de la API. Por ejemplo, si se genera el token:
+
+       eyJhbGciOiJodHRwOi8vd3d3LnczLm9yZy8yMDAxLzA0L3htbGRzaWctbW9yZSNobWFjLXNoYTI1NiIsInR5cCI6IkpXVCJ9.eyJ
+       odHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiZ3ZlcmFAdXYubXgiLCJ
+       odHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9naXZlbm5hbWUiOiJHdWlsbGVybW8
+       gSHVtYmVydG8gVmVyYSBBbWFybyIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGF
+       pbXMvcm9sZSI6IkFkbWluaXN0cmFkb3IiLCJleHAiOjE3MTM1OTAwMzYsImlzcyI6IlNlcnZpZG9yRmVpSldUIiwiYXVkIjoiQ2x
+       pZW50ZXNGZWlKV1QifQ.z0AFQg93P2APPsgC5fOHZA89mfXb9UEaKVssild0tnI
+
+     7. Podemos validar que sea un JWT válido. Entre a la página https://jwt.io/ y pegue este token para ver
+          sus propiedades.
+
+     8. El token es válido y observe que puede ver el usuario que tiene el acceso. Solo con esa cadena token,
+          usted puede tener acceso al sistema por 20 minutos. Es por ello que JWT no se considera un método
+          de acceso tan estricto, pues si este token es robado, cualquiera podría acceder a los recursos.
+
+     9. Observe que por último, se agrega la función para el cálculo del tiempo restante del token generado.
+     10. Enhorabuena, ha realizado correctamente este apartado Sus clientes deberán entrar a la ruta
+
+          /api/auth/ para iniciar sesión en la API y obtener un token válido.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar el inicio de sesión: Autenticación.
+     1. En la carpeta controllers, cree un nuevo archivo llamado auth.controller.js con el código
+
+     2. Lo que se busca es que sus clientes deban entrar a la ruta /api/auth/ para iniciar sesión en la API y
+          obtener un token válido.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar middleware para la autorización
+     Sus clientes van a enviarle sus tokens de acceso en cada petición. Hay que validarlos. Además van
+     requerir tokens de acceso no expiren mientras los están utilizando. Así que agregue la funcionalidad para
+     refrescar la validez del token si el usuario haciendo peticiones al sistema.
+     1. Para esto se implementará un middleware que veriYque la validez del token enviado por el cliente y
+
+          también se veriYcará si el rol enviado está autorizado para realizar la acción solicitada. Por último si el
+          token está cerca de expirar, se le enviará uno nuevo en un encabezado llamado Set-Authorization.
+     2. En la carpeta middlewares agregue un nuevo archivo llamado auth.middleware.js con el siguiente
+          código que contendrá esta funcionalidad.
+
+     3. Enhorabuena, ha realizado correctamente el apartado.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar las rutas.
+     Cuando un cliente realice una petición por medio de un endpoint de HTTP (GET, POST, PUT, DELETE),
+     necesitamos determinar cómo responderá el servidor estableciendo las rutas.
+     1. Dentro de la carpeta routes agrega un nuevo archivo llamado categorias.routes.js con código.
+
+     2. En este archivo establecemos que la ruta /api/categorias será manejada por el controlador
+          /controllers/categorias.controller.js.
+
+     3. Dentro de la carpeta routes agrega un nuevo archivo llamado productos.routes.js con el código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     4. En este archivo establecemos que la ruta /api/productos será manejada por el controlador
+          /controllers/productos.controller.js.
+
+     5. Dentro de la carpeta routes agrega un nuevo archivo llamado usuarios.routes.js con código.
+
+     6. En este archivo establecemos que la ruta /api/usuarios será manejada por el controlador
+          /controllers/usuarios.controller.js.
+
+     7. Dentro de la carpeta routes agrega un nuevo archivo llamado roles.routes.js con código.
+
+     8. En este archivo establecemos que la ruta /api/roles será manejada por el controlador
+          /controllers/roles.controller.js.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     9. Observe como se están protegiendo todos los métodos de los controladores que van a requerir
+          autenticación para ser accedidos. Esto se realiza agregando el middleware de autorización para cada
+          ruta o controlador que la aplicación requiera proteger. Por ejemplo, observe que en su archivo de
+          /routes/categorias.routes.js en cada endpoint se está colocando la invocación del middleware
+          Authorize() antes de la llamada a método del controlador. Si el middleware no envía un error de no
+          autorizado, la función se ejecutará por la función next() dentro del middleware. Si desea que dos o
+          más roles pudieran acceder a ese endpoint, solo agregue el nombre del rol separado por comas en el
+          método que implementa el endpoint.
+
+     10. Dentro de la carpeta routes agrega un nuevo archivo llamado archivos.routes.js con código.
+
+     11. Dentro de la carpeta routes agrega un nuevo archivo llamado auth.routes.js con código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     12. Dentro de la carpeta routes agrega un nuevo archivo llamado bitacora.routes.js con código.
+
+     13. Enhorabuena, ha creado las rutas de su aplicación.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. ConYgurar su programa principal
+     1. Abra su archivo index.js y elimine todo el código en él. Agregue el siguiente código.
+
+     2. Lea los comentarios que se proveen, le explican el funcionamiento de cada instrucción.
+     3. Enhorabuena, su aplicación esta lista para trabajar.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Agregar documentación a su API
+     1. Hay varias maneras de generar una documentación automática para su API. Generalmente esto se
+
+          hace para apoyar a los desarrolladores de frontend y sepan cómo se pueden comunicar con sus
+          endpoints.
+     2. Node.js genera una API compatible con la especiYcación OpenAPI por lo que pueden utilizarse
+          generadores de documentación de API como Swagger.
+     3. Para agregar Swagger a su proyecto, instale el siguiente paquete desde la terminal de Visual Studio
+          Code.
+
+       npm install swagger-autogen --save-dev
+       npm install swagger-ui-express --save
+
+     4. Ahora cree un nuevo archivo en la raíz de su proyecto llamado swagger.js con el siguiente contenido.
+
+     5. Ahora ejecute el siguiente comando para generar el archivo swagger-output.json en raíz.
+
+       node swagger.js
+
+     6. Ahora abra su archivo principal de su proyecto index.js y debajo de la funcionalidad de
+          controladores, asegúrese de incluir el servicio de generación de documentación de Swagger. Por
+          último, antes de las rutas agregue la interfaz de Swagger y que se pueda acceder desde la ruta
+          /swagger de su aplicación web.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     7. Vuelva a ejecutar su aplicación y ahora cuando entre a la ruta /swagger, verá la interfaz de Swagger
+          donde se documentan los endpoints expuestos por su API.
+
+     8. Puede utilizar esta interfaz también para probar el funcionamiento de su API. Navegue en ella y
+          veriYque que todo funciona correctamente.
+
+     9. Felicidades, ha creado su aplicación de manera correcta.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Probar su API
+     1. Utilizando su navegador web no es la forma más práctica de probar una API. Generalmente se utiliza
+
+          otro tipo de clientes web para hacer las pruebas de manera más eYciente.
+     2. Asegúrese de tener instalada la extensión REST Client para Visual Studio Code.
+
+     3. Agregue una nueva carpeta llamada restclient y dentro un nuevo archivo llamado auth.http en la raíz
+          de su proyecto con el siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     4. Ahora ejecute su aplicación e intente obtener la lista de categorías utilizando esta llamada GET.
+
+     5. Observe que recibe la respuesta de no autorizado con el código 401 Unauthorized. Esto le indica que
+          requiere enviar sus credenciales para poder acceder al recurso.
+
+     6. Ahora inicie sesión en la API mediante el método POST del controlador auth.
+
+     7. Ejecute la petición y observe la respuesta.
+
+     8. Si envía sus credenciales correctas, obtendrá un token de acceso con una validez de 20 minutos que
+          puede adjuntar a sus peticiones como ticket de autenticación y autorización.
+
+     9. Este token contiene su email, su nombre y su rol.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     10. Ahora agregue esta petición a su archivo auth.http. Copie y pegue el token generado en el inicio de
+          sesión después de la palabra Bearer. Respete el espacio colocado después de Bearer.
+
+     11. VeriYque ya puede obtener la lista de categorías.
+
+     12. Haga lo mismo con los otros endpoints como por ejemplo, obtener el tiempo restante.
+
+     13. Pruebe con un usuario que tenga el perYl de Usuario y veriYque que no pueda acceder a los recursos
+          del rol Administrador.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     14. Al faltar 5 minutos para que su token expire, veriYque sus peticiones devuelvan un nuevo token en el
+          encabezado Set-Authorization a sus clientes para refrescar la autenticación.
+
+     15. Puede agregar un nuevo archivo de peticiones de prueba para cada controlador, por ejemplo puede
+          crear el archivo categorias.http en la carpeta restclient con el siguiente código.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     16. Observe como hemos creado varias peticiones a nuestra API.
+     17. Observe como aparece el botón de Send Request encima de cada solicitud.
+     18. Comience con la primer prueba, presione el botón de Send Request para obtener la lista de categorías.
+
+          Recuerde que debe iniciar sesión primeramente.
+     19. Del lado derecho aparecen los resultados de la consulta. VeriYque que se obtienen correctamente su
+
+          lista de elementos.
+
+     20. Pruebe que puede agregar una nueva categoría utilizando el método POST.
+     21. Intente eliminar una categoría que tenga su propiedad como protegida en verdadero.
+     22. Observe como no le es permitido hacer esto. Ahora intente eliminar una creada en este momento.
+     23. Realice las mismas pruebas que hizo con categorías para los productos. Intente obtener la lista de
+
+          productos, agregar una nueva producto, editar y eliminarlas.
+     24. De la misma forma, haga lo mismo con los archivos. Aquí se le proporciona un ejemplo de cómo
+
+          consultar, crear, modiYcar y eliminar archivos. Debe crear una carpeta llamada restclient/assets y
+          colocar allí, los archivos de prueba que quiera publicar.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     25. Por último, pruebe su controlador de bitácora y que pueda obtener los registros almacenados.
+     26. Revise y reflexione sobre la estructura y funcionamiento de este Framework de desarrollo. La mayoría
+
+          de frameworks para desarrollo web funcionan de una manera similar
+     27. Enhorabuena, su aplicación funciona y está protegida con autenticación y autorización.
+Facultad de Estadística e Informática
+Práctica guiada
+
+     Instrucciones. Colocar su aplicación a un repositorio de código fuente.
+     1. Por último, antes de subir su aplicación a GitHub, agregue en la raíz un nuevo archivo llamado
+
+          .gitignore que previene el subir información innecesaria al repositorio público.
+     2. Copie el contenido de la plantilla que GitHub ofrece desde Plantilla GitHub.
+     3. Este nuevo archivo aparece en la raíz de su proyecto.
+
+     4. Abra su archivo desde la raíz de su proyecto y agregue la carpeta restclient y la extensión *.sql para
+          no subir estos elementos a GitHub pues pueden contener información sensible y privada.
+
+     5. Observe como su archivo .env no se publicará en GitHub por lo que debe de proporcionarlo a sus
+          clientes por algún otro medio que sea seguro.
+
+     6. Ahora ya puede publicar su archivo en GitHub para terminar la práctica.
+     7. Felicidades, ha creado su aplicación de manera correcta.
+
