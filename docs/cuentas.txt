@@ -1,0 +1,27 @@
+CUENTAS DE ACCESO - PROYECTO FINAL PS
+======================================
+URL Frontend: http://localhost:8080
+URL API:      http://localhost:3000/api
+Swagger:      http://localhost:3000/swagger
+
+NOTA: Las contraseñas se definen en el archivo .env antes de ejecutar
+      los seeders. Los valores abajo son los FALLBACK por defecto.
+      Si se configuraron valores diferentes en .env, usar esos.
+
+--- ROL ADMINISTRADOR ---
+Email:      admin@mail.com
+Contraseña: Admin.1234      (o el valor de ADMIN_SEED_PASSWORD en .env)
+Permisos:   CRUD de productos, categorías, archivos y usuarios.
+            Ver bitácora y todos los pedidos.
+
+--- ROL USUARIO ---
+Email:      usuario@mail.com
+Contraseña: User.1234       (o el valor de USER_SEED_PASSWORD en .env)
+Permisos:   Comprar, gestionar carrito, ver sus propios pedidos.
+
+FLUJO DE PRUEBA SUGERIDO:
+1. Login con administrador -> crear al menos un producto con imagen
+2. Logout
+3. Login con usuario -> ir a Comprar -> Agregar al carrito -> Confirmar pedido
+4. Revisar en Mis pedidos el historial
+5. Volver a login con admin -> revisar Pedidos y Bitácora
