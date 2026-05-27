@@ -8,6 +8,7 @@
         {
             <a class="nav-link" asp-controller="Comprar" asp-action="Index">Comprar</a>
             <a class="nav-link" asp-controller="Carrito" asp-action="Index"><i class="bi bi-cart"></i> Carrito</a>
+            <a class="nav-link" asp-controller="Pedidos" asp-action="Index"><i class="bi bi-bag"></i> Mis pedidos</a>
         }
         else if (User.FindFirstValue(ClaimTypes.Role) == "Administrador")
         {
@@ -16,6 +17,7 @@
             <a class="nav-link" asp-controller="Archivos" asp-action="Index">Archivos</a>
             <a class="nav-link" asp-controller="Usuarios" asp-action="Index">Usuarios</a>
             <a class="nav-link" asp-controller="Bitacora" asp-action="Index">Bitácora</a>
+            <a class="nav-link" asp-controller="Pedidos" asp-action="Index"><i class="bi bi-bag"></i> Pedidos</a>
         }
     }
     else

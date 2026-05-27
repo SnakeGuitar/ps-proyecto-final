@@ -1,0 +1,66 @@
+@model List<Pedido>
+@{
+    ViewData["Title"] = "Pedidos";
+    ViewData["SubTitle"] = "Historial";
+}
+<h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
+
+<div class="row small mb-3">
+    <div class="col text-end">
+        Mostrando @(Model?.Count ?? 0) elementos
+    </div>
+</div>
+
+@if (Model != null && Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-hover small align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    @if (User.IsInRole("Administrador"))
+                    {
+                        <th>Usuario</th>
+                    }
+                    <th class="text-end">Total</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.PedidoId</td>
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <td>@item.UsuarioEmail</td>
+                        }
+                        <td class="text-end">@item.Total.ToString("C")</td>
+                        <td>
+                            <span class="badge @(item.Estado == "pendiente" ? "text-bg-warning" : "text-bg-success")">
+                                @item.Estado
+                            </span>
+                        </td>
+                        <td>@item.CreatedAt?.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>
+                            <a asp-action="Detalle" asp-route-id="@item.PedidoId"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="mt-5">
+        <div class="alert alert-warning" role="alert">
+            No hay pedidos registrados.
+        </div>
+    </div>
+}

@@ -1,17 +1,94 @@
+@model List<CarritoItem>
 @{
     ViewData["Title"] = "Carrito de compras";
     ViewData["SubTitle"] = "Listado";
+    var total = Model?.Sum(i => i.Precio * i.Cantidad) ?? 0;
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <div class="row small mb-3">
     <div class="col text-end">
-        Mostrando 0 elementos
+        Mostrando @(Model?.Count ?? 0) elementos
     </div>
 </div>
 
-<div class="mt-5">
-    <div class="alert alert-warning" role="alert">
-        No se han encontrado elementos. Inténtelo de nuevo más tarde.
+@if (Model != null && Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-hover small align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Producto</th>
+                    <th class="text-end">Precio unit.</th>
+                    <th class="text-center">Cantidad</th>
+                    <th class="text-end">Subtotal</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @if (item.Producto?.ArchivoId != null)
+                            {
+                                <img src="@ViewBag.Url/api/archivos/@item.Producto.ArchivoId"
+                                     alt="@item.Producto?.Titulo"
+                                     style="max-height:40px; margin-right:8px;">
+                            }
+                            @item.Producto?.Titulo
+                        </td>
+                        <td class="text-end">@item.Precio.ToString("C")</td>
+                        <td class="text-center" style="width:160px">
+                            <form asp-action="Actualizar" method="post" class="d-inline-flex align-items-center gap-1">
+                                <input type="hidden" name="id" value="@item.CarritoItemId" />
+                                <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="99"
+                                       class="form-control form-control-sm text-center" style="width:65px">
+                                <button type="submit" class="btn btn-outline-secondary btn-sm" title="Actualizar">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td class="text-end">@((item.Precio * item.Cantidad).ToString("C"))</td>
+                        <td class="text-end">
+                            <form asp-action="Eliminar" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@item.CarritoItemId" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr class="fw-bold">
+                    <td colspan="3" class="text-end">Total:</td>
+                    <td class="text-end">@total.ToString("C")</td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        </table>
     </div>
-</div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <form asp-action="Checkout" method="post">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-bag-check-fill"></i> Confirmar pedido
+            </button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="mt-5">
+        <div class="alert alert-warning" role="alert">
+            El carrito está vacío. <a asp-controller="Comprar" asp-action="Index">Ir a comprar</a>
+        </div>
+    </div>
+}

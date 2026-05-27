@@ -18,6 +18,12 @@
         <p class="mt-auto card-text text-success fw-semibold small"><i class="bi bi-lightning-fill"></i> Envío gratis</p>
     </div>
     <div class="card-footer">
-        <a class="btn btn-primary btn-sm" href="#" role="button">Comprar</a>
+        <form asp-controller="Carrito" asp-action="Agregar" method="post">
+            <input type="hidden" name="productoid" value="@Model.ProductoId" />
+            <input type="hidden" name="returnUrl" value="/Comprar" />
+            <button type="submit" class="btn btn-primary btn-sm w-100">
+                <i class="bi bi-cart-plus"></i> Agregar al carrito
+            </button>
+        </form>
     </div>
 </div>
