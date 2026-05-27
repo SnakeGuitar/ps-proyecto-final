@@ -1,10 +1,14 @@
 const express = require('express')
 const cors = require("cors")
 const dotenv = require('dotenv')
+const helmet = require('helmet')
 const app = express()
 
 // Primero carga la configuración del archivo .env para que este disponible en las demás llamadas
 dotenv.config()
+
+// V-12: Cabeceras de seguridad HTTP (X-Content-Type-Options, X-Frame-Options, etc.)
+app.use(helmet())
 
 // Se requiere para entender los datos recibidos en JSON
 app.use(express.json())
@@ -17,14 +21,15 @@ var corsOptions = {
 }
 app.use(cors(corsOptions))
 
-// Swagger
-const swaggerUi = require('swagger-ui-express')
-let swaggerFile
-try {
-    swaggerFile = require('./swagger-output.json')
-    app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile))
-} catch (e) {
-    console.log('swagger-output.json not found, skipping swagger setup')
+// V-15: Swagger solo disponible fuera de produccion
+if (process.env.NODE_ENV !== 'production') {
+    const swaggerUi = require('swagger-ui-express')
+    try {
+        const swaggerFile = require('./swagger-output.json')
+        app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerFile))
+    } catch (e) {
+        console.log('swagger-output.json not found, skipping swagger setup')
+    }
 }
 
 // Bitacora
@@ -38,6 +43,8 @@ app.use("/api/roles", require('./routes/roles.routes'))
 app.use("/api/auth", require('./routes/auth.routes'))
 app.use("/api/archivos", require('./routes/archivos.routes'))
 app.use("/api/bitacora", require('./routes/bitacora.routes'))
+app.use("/api/carrito", require('./routes/carrito.routes'))
+app.use("/api/pedidos", require('./routes/pedidos.routes'))
 app.get('/', (req, res) => { res.send("Mercado Libre API") })
 app.use((req, res) => { res.status(404).send("Recurso no encontrado") })
 
