@@ -1,8 +1,22 @@
 const { usuario, rol, Sequelize } = require('../models')
 const bcrypt = require('bcrypt')
 const crypto = require('crypto')
+const { body, validationResult } = require('express-validator')
 
 let self = {}
+
+// Validadores reutilizables
+self.usuarioCreateValidator = [
+    body('email', 'El email no es valido').isEmail().normalizeEmail(),
+    body('password', 'La contrasena debe tener al menos 8 caracteres').isLength({ min: 8 }),
+    body('nombre', 'El nombre es obligatorio').not().isEmpty().trim().escape(),
+    body('rol', 'El rol es obligatorio').not().isEmpty().trim(),
+]
+
+self.usuarioUpdateValidator = [
+    body('nombre', 'El nombre es obligatorio').not().isEmpty().trim().escape(),
+    body('rol', 'El rol es obligatorio').not().isEmpty().trim(),
+]
 
 // GET: api/usuarios
 self.getAll = async function (req, res, next) {
@@ -39,7 +53,13 @@ self.get = async function (req, res, next) {
 // POST: api/usuarios
 self.create = async function (req, res, next) {
     try {
+        const errors = validationResult(req)
+        if (!errors.isEmpty())
+            return res.status(400).json({ errores: errors.array() })
+
         const rolusuario = await rol.findOne({ where: { nombre: req.body.rol } })
+        if (!rolusuario)
+            return res.status(400).json({ mensaje: 'El rol especificado no existe.' })
 
         const data = await usuario.create({
             id: crypto.randomUUID(),
@@ -64,11 +84,21 @@ self.create = async function (req, res, next) {
 // PUT: api/usuarios/email
 self.update = async function (req, res, next) {
     try {
+        // V-10: Validar entradas
+        const errors = validationResult(req)
+        if (!errors.isEmpty())
+            return res.status(400).json({ errores: errors.array() })
+
         const email = req.params.email
         const rolusuario = await rol.findOne({ where: { nombre: req.body.rol } })
-        req.body.rolid = rolusuario.id
+        if (!rolusuario)
+            return res.status(400).json({ mensaje: 'El rol especificado no existe.' })
 
-        const data = await usuario.update(req.body, {
+        // V-01: Fijar campos permitidos explicitamente (evita Mass Assignment)
+        const data = await usuario.update({
+            nombre: req.body.nombre,
+            rolid: rolusuario.id
+        }, {
             where: { email: email },
         })
         if (data[0] === 0)

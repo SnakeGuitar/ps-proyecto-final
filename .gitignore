@@ -8,6 +8,8 @@ Thumbs.db
 # Node (backend)
 **/node_modules/
 **/.env
+# V-05: Archivo de secretos raiz del proyecto (nunca versionar)
+.env
 **/log/
 **/uploads/
 **/restclient/

@@ -22,8 +22,8 @@ const TiempoRestanteToken = (req) => {
         const authHeader = req.header('Authorization')
         // Obtiene el token de la solicitud
         const token = authHeader.split(' ')[1]
-        // Verifica el token, si no es válido envía error y salta al catch
-        const decodedToken = jwt.verify(token, jwtSecret)
+        // V-09: Especificar algoritmo explicitamente para prevenir confusion de algoritmo
+        const decodedToken = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] })
 
         // Regresa el tiempo restante en minutos
         const time = (decodedToken.exp - (new Date().getTime() / 1000))

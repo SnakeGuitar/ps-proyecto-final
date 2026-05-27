@@ -13,24 +13,22 @@ const errorHandler = (err, req, res, next) => {
     if (req.decodedToken) {
         email = req.decodedToken[ClaimTypes.Name];
     }
-    // Se guarda en un archivo de texto
-    fs.appendFile('log/log.txt', new Date() + ` - ${statusCode} - ${ip} - ${email} - ${(err.message || mensaje)}\n`, err => {
+    // V-08: Registrar stack completo SOLO en el servidor, nunca enviarlo al cliente
+    fs.appendFile('log/log.txt', new Date() + ` - ${statusCode} - ${ip} - ${email} - ${(err.message || mensaje)} - ${err.stack}\n`, err => {
         if (err) {
             console.error(err);
         }
     });
 
-    // Se envia el mensaje apropiado al usuario
+    // En desarrollo se muestra el mensaje de error pero nunca el stack trace
     if (process.env.NODE_ENV === 'development') {
         mensaje = err.message || mensaje
-        res.status(statusCode).json({
-            status: statusCode,
-            mensaje: mensaje,
-            stack: err.stack
-        })
-    } else {
-        res.status(statusCode).send({ mensaje: mensaje })
     }
+
+    res.status(statusCode).json({
+        status: statusCode,
+        mensaje: mensaje
+    })
 }
 
 module.exports = errorHandler

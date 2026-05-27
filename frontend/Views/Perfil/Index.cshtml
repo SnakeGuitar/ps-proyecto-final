@@ -28,7 +28,10 @@
         </div>
         <div class="mb-3 ps-3 small">
             <label asp-for="Jwt" class="form-label form-text"></label>
-            <div class="form-text text-body">@Model.Jwt</div>
+            @* R-05: No mostrar el JWT completo para evitar fugas por shoulder surfing *@
+            <div class="form-text text-muted fst-italic">
+                @(Model.Jwt.Length > 20 ? Model.Jwt[..10] + "..." + Model.Jwt[^6..] : "***")
+            </div>
         </div>
         <div class="mb-3 ps-3">
             <label class="form-label form-text">Tiempo restante</label>

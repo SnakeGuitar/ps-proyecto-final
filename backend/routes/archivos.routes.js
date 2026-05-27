@@ -13,10 +13,11 @@ router.get('/:id', archivos.get)
 router.get('/:id/detalle', Authorize('Administrador'), archivos.getDetalle)
 
 // POST: api/archivos
-router.post('/', upload.single("file"), Authorize('Administrador'), archivos.create)
+// R-01: Authorize antes de upload para no guardar archivos de solicitudes no autenticadas
+router.post('/', Authorize('Administrador'), upload.single("file"), archivos.create)
 
 // PUT: api/archivos/5
-router.put('/:id', upload.single("file"), Authorize('Administrador'), archivos.update)
+router.put('/:id', Authorize('Administrador'), upload.single("file"), archivos.update)
 
 // DELETE: api/archivos/5
 router.delete('/:id', Authorize('Administrador'), archivos.delete)

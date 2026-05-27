@@ -1,11 +1,23 @@
 const bcrypt = require('bcrypt')
 const { usuario, rol, Sequelize } = require('../models')
 const { GeneraToken, TiempoRestanteToken } = require('../services/jwttoken.service')
+const { body, validationResult } = require('express-validator')
 
 let self = {}
 
+// V-10: Validadores para el login
+self.loginValidator = [
+    body('email', 'El email no es valido').isEmail().normalizeEmail(),
+    body('password', 'La contrasena es obligatoria').not().isEmpty(),
+]
+
 // POST: api/auth
 self.login = async function (req, res, next) {
+    // V-10: Validar entradas antes de consultar la BD
+    const errors = validationResult(req)
+    if (!errors.isEmpty())
+        return res.status(400).json({ errores: errors.array() })
+
     const { email, password } = req.body
 
     try {
@@ -44,8 +56,9 @@ self.login = async function (req, res, next) {
 // GET: api/auth/tiempo
 self.tiempo = async function (req, res) {
     const tiempo = TiempoRestanteToken(req)
+    // V-13: Agregar return para evitar enviar dos respuestas (ERR_HTTP_HEADERS_SENT)
     if (tiempo == null)
-        res.status(404).send()
+        return res.status(404).send()
 
     res.status(200).send(tiempo)
 }

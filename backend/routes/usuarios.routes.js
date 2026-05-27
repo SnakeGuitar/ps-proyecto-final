@@ -9,10 +9,10 @@ router.get('/', Authorize('Administrador'), usuarios.getAll)
 router.get('/:email', Authorize('Administrador'), usuarios.get)
 
 // POST: api/usuarios
-router.post('/', Authorize('Administrador'), usuarios.create)
+router.post('/', Authorize('Administrador'), usuarios.usuarioCreateValidator, usuarios.create)
 
 // PUT: api/usuarios/email
-router.put('/:email', Authorize('Administrador'), usuarios.update)
+router.put('/:email', Authorize('Administrador'), usuarios.usuarioUpdateValidator, usuarios.update)
 
 // DELETE: api/usuarios/email
 router.delete('/:email', Authorize('Administrador'), usuarios.delete)

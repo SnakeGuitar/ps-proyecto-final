@@ -1,5 +1,6 @@
 const { archivo } = require('../models')
 const fs = require("fs")
+const path = require("path")
 
 let self = {}
 
@@ -36,8 +37,19 @@ self.get = async function (req, res, next) {
             return res.status(404).send()
 
         let imagen = data.datos
-        if (!data.indb)
-            imagen = fs.readFileSync("uploads/" + data.nombre)
+        if (!data.indb) {
+            // V-04: Prevenir Path Traversal validando que la ruta este dentro de uploads/
+            const uploadsDir = path.resolve("uploads")
+            const filePath = path.resolve("uploads", data.nombre)
+
+            if (!filePath.startsWith(uploadsDir + path.sep)) {
+                return res.status(403).json({ mensaje: 'Acceso denegado al archivo.' })
+            }
+            if (!fs.existsSync(filePath)) {
+                return res.status(404).send()
+            }
+            imagen = fs.readFileSync(filePath)
+        }
 
         res.status(200).contentType(data.mime).send(imagen)
     } catch (error) {

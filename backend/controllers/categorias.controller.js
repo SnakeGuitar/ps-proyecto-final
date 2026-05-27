@@ -55,8 +55,10 @@ self.update = async function (req, res, next) {
         if (!errors.isEmpty()) throw new Error(JSON.stringify(errors));
 
         let id = req.params.id
-        let body = req.body
-        let data = await categoria.update(body, { where: { id: id } })
+        // V-02: Fijar campos permitidos explicitamente (evita Mass Assignment sobre 'protegida')
+        let data = await categoria.update({
+            nombre: req.body.nombre
+        }, { where: { id: id } })
         if (data[0] === 0)
             return res.status(404).send()
 

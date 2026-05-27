@@ -90,8 +90,13 @@ self.update = async function (req, res, next) {
         if (!errors.isEmpty()) throw new Error(JSON.stringify(errors));
 
         let id = req.params.id
-        let body = req.body
-        let data = await producto.update(body, { where: { id: id } })
+        // V-03: Fijar campos permitidos explicitamente (evita Mass Assignment)
+        let data = await producto.update({
+            titulo: req.body.titulo,
+            descripcion: req.body.descripcion,
+            precio: req.body.precio,
+            archivoid: req.body.archivoid || null
+        }, { where: { id: id } })
         if (data[0] === 0)
             return res.status(404).send()
         // Bitacora

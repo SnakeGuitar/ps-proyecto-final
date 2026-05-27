@@ -16,11 +16,12 @@ module.exports = {
         dialect: 'mysql'
     },
     production: {
-        username: process.env.PROD_DB_USERNAME,
-        password: process.env.PROD_DB_PASSWORD,
-        database: process.env.PROD_DB_NAME,
-        host: process.env.PROD_DB_HOSTNAME,
-        port: process.env.PROD_DB_PORT,
+        // R-04: Usar las mismas variables DB_* que development para alinear con Docker Compose
+        username: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_DATABASE,
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT,
         dialect: 'mysql'
     }
 }
