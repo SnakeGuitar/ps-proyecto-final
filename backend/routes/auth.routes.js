@@ -15,6 +15,9 @@ const loginLimiter = rateLimit({
 // POST: api/auth
 router.post('/', loginLimiter, auth.loginValidator, auth.login)
 
+// POST: api/auth/registro
+router.post('/registro', auth.registroValidator, auth.registro)
+
 // GET: api/auth/tiempo
 router.get('/tiempo', Authorize('Usuario,Administrador'), auth.tiempo)
 

@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt')
+const crypto = require('crypto')
 const { usuario, rol, Sequelize } = require('../models')
 const { GeneraToken, TiempoRestanteToken } = require('../services/jwttoken.service')
 const { body, validationResult } = require('express-validator')
@@ -47,6 +48,50 @@ self.login = async function (req, res, next) {
             nombre: data.nombre,
             rol: data.rol,
             jwt: token
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
+// V-10: Validadores para el registro
+self.registroValidator = [
+    body('email', 'El email no es valido').isEmail().normalizeEmail(),
+    body('password', 'La contrasena debe tener al menos 8 caracteres').isLength({ min: 8 }),
+    body('nombre', 'El nombre es obligatorio').not().isEmpty().trim().escape(),
+]
+
+// POST: api/auth/registro
+self.registro = async function (req, res, next) {
+    const errors = validationResult(req)
+    if (!errors.isEmpty())
+        return res.status(400).json({ errores: errors.array() })
+
+    const { email, password, nombre } = req.body
+
+    try {
+        const existe = await usuario.findOne({ where: { email } })
+        if (existe)
+            return res.status(409).json({ mensaje: 'El correo ya está registrado.' })
+
+        const rolUsuario = await rol.findOne({ where: { nombre: 'Usuario' } })
+        if (!rolUsuario)
+            return res.status(500).json({ mensaje: 'Rol de usuario no encontrado.' })
+
+        const data = await usuario.create({
+            id: crypto.randomUUID(),
+            email,
+            passwordhash: await bcrypt.hash(password, 10),
+            nombre,
+            rolid: rolUsuario.id
+        })
+
+        req.bitacora('usuario.registro', data.email)
+
+        res.status(201).json({
+            email: data.email,
+            nombre: data.nombre,
+            rol: rolUsuario.nombre
         })
     } catch (error) {
         next(error)

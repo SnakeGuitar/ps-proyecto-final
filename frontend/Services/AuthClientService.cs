@@ -17,6 +17,17 @@ public class AuthClientService(HttpClient client, IHttpContextAccessor httpConte
         return token!;
     }
 
+    public async Task RegistrarAsync(Registro model)
+    {
+        var payload = new { model.Email, model.Password, model.Nombre };
+        var response = await client.PostAsJsonAsync("api/auth/registro", payload);
+        if (!response.IsSuccessStatusCode)
+        {
+            var msg = await response.Content.ReadAsStringAsync();
+            throw new Exception(msg);
+        }
+    }
+
     public async void IniciaSesionAsync(List<Claim> claims)
     {
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

@@ -50,6 +50,33 @@ public class AuthController(AuthClientService auth) : Controller
         return View(model);
     }
 
+    [AllowAnonymous]
+    public IActionResult Registro()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    [AllowAnonymous]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistroAsync(Registro model)
+    {
+        if (!ModelState.IsValid)
+            return View("Registro", model);
+
+        try
+        {
+            await auth.RegistrarAsync(model);
+            TempData["Mensaje"] = "Cuenta creada correctamente. Inicia sesión.";
+            return RedirectToAction("Index");
+        }
+        catch (Exception)
+        {
+            ModelState.AddModelError("Email", "El correo ya está registrado o ocurrió un error.");
+            return View("Registro", model);
+        }
+    }
+
     [Authorize(Roles = "Administrador, Usuario")]
     public async Task<IActionResult> SalirAsync()
     {
