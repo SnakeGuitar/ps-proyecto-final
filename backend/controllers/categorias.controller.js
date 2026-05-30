@@ -4,7 +4,8 @@ const { body, validationResult } = require('express-validator');
 let self = {}
 
 self.categoriaValidator = [
-    body('nombre', 'El campo {0} es obligatorio').not().isEmpty()
+    // V-18: trim() elimina espacios, escape() convierte < > & " ' a entidades HTML (previene XSS almacenado)
+    body('nombre', 'El campo nombre es obligatorio').not().isEmpty().trim().escape()
 ]
 
 // GET: api/categorias

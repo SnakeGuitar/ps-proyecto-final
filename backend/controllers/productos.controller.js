@@ -5,9 +5,10 @@ const Op = Sequelize.Op;
 let self = {}
 
 self.productoValidator = [
-    body('titulo', 'El campo {0} es obligatorio').not().isEmpty(),
-    body('descripcion', 'El campo {0} es obligatorio').not().isEmpty(),
-    body('precio', 'El campo {0} es obligatorio').not().isEmpty().isDecimal({ force_decimal: false }),
+    // V-18: escape() previene XSS almacenado en campos de texto libre
+    body('titulo', 'El campo titulo es obligatorio').not().isEmpty().trim().escape(),
+    body('descripcion', 'El campo descripcion es obligatorio').not().isEmpty().trim().escape(),
+    body('precio', 'El campo precio es obligatorio').not().isEmpty().isDecimal({ force_decimal: false }),
 ]
 
 // GET: api/productos

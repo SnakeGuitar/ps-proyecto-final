@@ -4,6 +4,11 @@ const { usuario, rol, Sequelize } = require('../models')
 const { GeneraToken, TiempoRestanteToken } = require('../services/jwttoken.service')
 const { body, validationResult } = require('express-validator')
 
+// V-20: Hash dummy para timing attack protection.
+// bcrypt.compare siempre corre (exista o no el usuario) para igualar tiempos
+// de respuesta y evitar enumeración de emails por diferencia de latencia.
+const DUMMY_HASH = bcrypt.hashSync('dummy_timing_protection_placeholder', 10)
+
 let self = {}
 
 // V-10: Validadores para el login
@@ -29,12 +34,11 @@ self.login = async function (req, res, next) {
             include: { model: rol, attributes: [] }
         })
 
-        if (data === null)
-            return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos.' })
-
-        // Se compara la contraseña vs el hash almacenado
-        const passwordMatch = await bcrypt.compare(password, data.passwordhash)
-        if (!passwordMatch)
+        // V-20: Siempre ejecutar bcrypt.compare para igualar tiempos de respuesta
+        // (previene timing attack para enumeración de usuarios)
+        const hash = data?.passwordhash ?? DUMMY_HASH
+        const passwordMatch = await bcrypt.compare(password, hash)
+        if (!data || !passwordMatch)
             return res.status(401).json({ mensaje: 'Usuario o contraseña incorrectos.' })
 
         // Utilizamos los nombres de Claims estandar
